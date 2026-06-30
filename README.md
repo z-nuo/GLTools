@@ -22,7 +22,7 @@ go get github.com/z-nuo/GLTools
 | gljson | JSON 工具 |
 | glfile | 文件和路径工具 |
 | glhttp | HTTP 响应和客户端工具 |
-| gllog | slog 日志工具 |
+| gllog | zap 日志工具 |
 | glconfig | 配置读取工具 |
 | glerror | 错误码工具 |
 | glretry | 重试工具 |
@@ -343,11 +343,24 @@ err := client.PostFile(context.Background(), uploadURL, nil, fields, "file", "./
 
 ## gllog
 
-`gllog` 提供基于 `log/slog` 的日志器创建和默认日志器设置能力。
+`gllog` 提供基于 `go.uber.org/zap` 的高性能结构化日志能力，支持控制台/JSON 输出、默认日志器、调用方信息、错误堆栈，以及按小时或按天切分日志文件。
 
 导入路径：`github.com/z-nuo/GLTools/gllog`
 
-常用类型和函数：`Format`、`FormatJSON`、`FormatText`、`Config`、`New`、`SetDefault`。
+常用类型和函数：`Format`、`FormatJSON`、`FormatConsole`、`Level`、`LevelInfo`、`Rotate`、`RotateHourly`、`RotateDaily`、`Config`、`New`、`SetDefault`、`L`、`S`、`Sync`。
+
+企业级日志库通常需要满足这些要求：
+
+- 支持结构化字段，便于日志采集、检索和告警。
+- 支持 debug、info、warn、error 等日志级别。
+- 支持 JSON 格式，便于接入 ELK、Loki、Datadog 等平台。
+- 支持控制台格式，便于本地开发排查。
+- 支持调用方文件和行号，便于定位问题。
+- 支持 error 级别堆栈，便于线上故障分析。
+- 支持按小时或按天切分日志文件，便于归档和清理。
+- 支持 stdout、文件、自定义 writer 和同时输出。
+- 支持全局默认 logger，降低业务代码接入成本。
+- 提供 Sync 能力，进程退出前可主动刷新日志缓冲。
 
 ```go
 package main
@@ -355,8 +368,8 @@ package main
 import (
 	"bytes"
 	"fmt"
-	"log/slog"
 
+	"go.uber.org/zap"
 	"github.com/z-nuo/GLTools/gllog"
 )
 
@@ -364,13 +377,13 @@ func main() {
 	var buf bytes.Buffer
 	logger, err := gllog.New(gllog.Config{
 		Output: &buf,
-		Format: gllog.FormatText,
-		Level:  slog.LevelInfo,
+		Format: gllog.FormatConsole,
+		Level:  gllog.LevelInfo,
 	})
 	if err != nil {
 		panic(err)
 	}
-	logger.Info("hello")
+	logger.Info("hello", zap.String("name", "GLTools"))
 	fmt.Println(buf.Len() > 0)
 }
 ```

@@ -36,7 +36,7 @@
 - Create `glfile/file.go` and `glfile/file_test.go`: file and path helpers.
 - Create `glerror/error.go` and `glerror/error_test.go`: code error helpers.
 - Create `glhttp/response.go`, `glhttp/client.go`, and `glhttp/http_test.go`: response model and HTTP client.
-- Create `gllog/log.go` and `gllog/log_test.go`: `slog` setup helpers.
+- Create `gllog/log.go` and `gllog/log_test.go`: zap logging helpers.
 - Create `glconfig/config.go` and `glconfig/config_test.go`: JSON/YAML/env configuration helpers.
 - Create `glretry/retry.go` and `glretry/retry_test.go`: retry helpers.
 - Create `gllimit/limit.go` and `gllimit/limit_test.go`: rate limiter wrapper.
@@ -531,8 +531,11 @@ git commit -m "feat: add error and http helpers"
 - Produces:
   - `gllog.Format`
   - `gllog.Config`
-  - `gllog.New(cfg Config) (*slog.Logger, error)`
-  - `gllog.SetDefault(logger *slog.Logger)`
+  - `gllog.New(cfg Config) (*zap.Logger, error)`
+  - `gllog.SetDefault(logger *zap.Logger)`
+  - `gllog.L() *zap.Logger`
+  - `gllog.S() *zap.SugaredLogger`
+  - `gllog.Sync() error`
   - `glconfig.LoadJSON(path string, out any) error`
   - `glconfig.LoadYAML(path string, out any) error`
   - `glconfig.Env(key string, def string) string`
@@ -541,15 +544,15 @@ git commit -m "feat: add error and http helpers"
 
 - [ ] **Step 1: Write failing tests for `gllog`**
 
-Test JSON and text logger creation using a `bytes.Buffer`:
+Test JSON and console logger creation using a `bytes.Buffer`:
 
 ```go
 buf := new(bytes.Buffer)
-logger, err := New(Config{Output: buf, Format: FormatJSON, Level: slog.LevelInfo})
+logger, err := New(Config{Output: buf, Format: FormatJSON, Level: LevelInfo})
 if err != nil {
 	t.Fatal(err)
 }
-logger.Info("hello", slog.String("name", "gltools"))
+logger.Info("hello", zap.String("name", "gltools"))
 if !strings.Contains(buf.String(), `"msg":"hello"`) {
 	t.Fatalf("log output = %s", buf.String())
 }
@@ -561,7 +564,7 @@ Expected before implementation: FAIL. Expected after implementation: PASS.
 
 - [ ] **Step 2: Implement `gllog`**
 
-Define `type Format string` with constants `FormatJSON` and `FormatText`. `Config` includes `Output io.Writer`, `Format Format`, `Level slog.Level`, and `AddSource bool`. Default output is `os.Stdout`. Return an error for unsupported format.
+Define zap-based logging helpers. `Config` includes `Output io.Writer`, `FilePath string`, `Format Format`, `Level Level`, `Rotate Rotate`, `AddCaller bool`, `AddStacktrace bool`, and `AlsoStdout bool`. Support `FormatJSON`, `FormatConsole`, `RotateHourly`, and `RotateDaily`. Default output is `os.Stdout`. Return an error for unsupported format or level.
 
 - [ ] **Step 3: Write failing tests for `glconfig`**
 
@@ -761,7 +764,7 @@ README must include:
 | gljson | JSON 工具 |
 | glfile | 文件和路径工具 |
 | glhttp | HTTP 响应和客户端工具 |
-| gllog | slog 日志工具 |
+| gllog | zap 日志工具 |
 | glconfig | 配置读取工具 |
 | glerror | 错误码工具 |
 | glretry | 重试工具 |

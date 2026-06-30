@@ -289,11 +289,11 @@ err := client.PostFile(context.Background(), uploadURL, nil, fields, "file", "./
 
 ## gllog
 
-`gllog` 提供基于 `log/slog` 的日志器创建和默认日志器设置能力。
+`gllog` 提供基于 `go.uber.org/zap` 的高性能结构化日志能力，支持控制台/JSON 输出、默认日志器、调用方信息、错误堆栈，以及按小时或按天切分日志文件。
 
 导入路径：`github.com/z-nuo/GLTools/gllog`
 
-常用类型和函数：`Format`、`FormatJSON`、`FormatText`、`Config`、`New`、`SetDefault`。
+常用类型和函数：`Format`、`FormatJSON`、`FormatConsole`、`Level`、`LevelInfo`、`Rotate`、`RotateHourly`、`RotateDaily`、`Config`、`New`、`SetDefault`、`L`、`S`、`Sync`。
 
 ```go
 package main
@@ -301,8 +301,8 @@ package main
 import (
 	"bytes"
 	"fmt"
-	"log/slog"
 
+	"go.uber.org/zap"
 	"github.com/z-nuo/GLTools/gllog"
 )
 
@@ -310,13 +310,13 @@ func main() {
 	var buf bytes.Buffer
 	logger, err := gllog.New(gllog.Config{
 		Output: &buf,
-		Format: gllog.FormatText,
-		Level:  slog.LevelInfo,
+		Format: gllog.FormatConsole,
+		Level:  gllog.LevelInfo,
 	})
 	if err != nil {
 		panic(err)
 	}
-	logger.Info("hello")
+	logger.Info("hello", zap.String("name", "GLTools"))
 	fmt.Println(buf.Len() > 0)
 }
 ```
