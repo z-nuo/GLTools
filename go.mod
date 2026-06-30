@@ -1,8 +1,9 @@
 module github.com/z-nuo/GLTools
 
-go 1.22
+go 1.25
 
 require (
+	github.com/apache/thrift v0.23.0
 	github.com/json-iterator/go v1.1.12
 	go.uber.org/zap v1.28.0
 	golang.org/x/time v0.5.0
