@@ -522,6 +522,7 @@ git commit -m "feat: add error and http helpers"
 
 **Files:**
 - Create: `gllog/log.go`
+- Create: `gllog/trace.go`
 - Create: `gllog/log_test.go`
 - Create: `glconfig/config.go`
 - Create: `glconfig/config_test.go`
@@ -536,6 +537,15 @@ git commit -m "feat: add error and http helpers"
   - `gllog.L() *zap.Logger`
   - `gllog.S() *zap.SugaredLogger`
   - `gllog.Sync() error`
+  - `gllog.WithTrace(ctx context.Context, traceID string, spanID string) context.Context`
+  - `gllog.TraceID(ctx context.Context) string`
+  - `gllog.SpanID(ctx context.Context) string`
+  - `gllog.TraceFields(ctx context.Context) []zap.Field`
+  - `gllog.WithContext(ctx context.Context, logger *zap.Logger) *zap.Logger`
+  - `gllog.DebugContext(ctx context.Context, msg string, fields ...zap.Field)`
+  - `gllog.InfoContext(ctx context.Context, msg string, fields ...zap.Field)`
+  - `gllog.WarnContext(ctx context.Context, msg string, fields ...zap.Field)`
+  - `gllog.ErrorContext(ctx context.Context, msg string, err error, fields ...zap.Field)`
   - `glconfig.LoadJSON(path string, out any) error`
   - `glconfig.LoadYAML(path string, out any) error`
   - `glconfig.Env(key string, def string) string`
@@ -564,7 +574,7 @@ Expected before implementation: FAIL. Expected after implementation: PASS.
 
 - [ ] **Step 2: Implement `gllog`**
 
-Define zap-based logging helpers. `Config` includes `Output io.Writer`, `FilePath string`, `Format Format`, `Level Level`, `Rotate Rotate`, `AddCaller bool`, `AddStacktrace bool`, and `AlsoStdout bool`. Support `FormatJSON`, `FormatConsole`, `RotateHourly`, and `RotateDaily`. Default output is `os.Stdout`. Return an error for unsupported format or level.
+Define zap-based logging helpers. `Config` includes `Output io.Writer`, `FilePath string`, `Format Format`, `Level Level`, `Rotate Rotate`, `AddCaller bool`, `AddStacktrace bool`, and `AlsoStdout bool`. Support `FormatJSON`, `FormatConsole`, `RotateHourly`, and `RotateDaily`. Default output is `os.Stdout`. Return an error for unsupported format or level. Support lightweight context trace fields by reading `trace_id` and `span_id` from `context.Context` and appending them to zap logs.
 
 - [ ] **Step 3: Write failing tests for `glconfig`**
 

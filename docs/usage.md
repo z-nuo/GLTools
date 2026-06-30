@@ -289,18 +289,22 @@ err := client.PostFile(context.Background(), uploadURL, nil, fields, "file", "./
 
 ## gllog
 
-`gllog` 提供基于 `go.uber.org/zap` 的高性能结构化日志能力，支持控制台/JSON 输出、默认日志器、调用方信息、错误堆栈，以及按小时或按天切分日志文件。
+`gllog` 提供基于 `go.uber.org/zap` 的高性能结构化日志能力，支持控制台/JSON 输出、默认日志器、调用方信息、错误堆栈、链路字段，以及按小时或按天切分日志文件。
 
 导入路径：`github.com/z-nuo/GLTools/gllog`
 
-常用类型和函数：`Format`、`FormatJSON`、`FormatConsole`、`Level`、`LevelInfo`、`Rotate`、`RotateHourly`、`RotateDaily`、`Config`、`New`、`SetDefault`、`L`、`S`、`Sync`。
+常用类型和函数：`Format`、`FormatJSON`、`FormatConsole`、`Level`、`LevelInfo`、`Rotate`、`RotateHourly`、`RotateDaily`、`Config`、`New`、`SetDefault`、`L`、`S`、`Sync`、`WithTrace`、`TraceID`、`SpanID`、`TraceFields`、`WithContext`、`DebugContext`、`InfoContext`、`WarnContext`、`ErrorContext`。
+
+链路追踪说明：`gllog` 支持从 `context.Context` 自动输出 `trace_id` 和 `span_id`，用于按请求链路检索日志；它不替代 OpenTelemetry、Jaeger、SkyWalking 等完整分布式追踪系统。
 
 ```go
 package main
 
 import (
 	"bytes"
+	"context"
 	"fmt"
+	"strings"
 
 	"go.uber.org/zap"
 	"github.com/z-nuo/GLTools/gllog"
@@ -310,14 +314,18 @@ func main() {
 	var buf bytes.Buffer
 	logger, err := gllog.New(gllog.Config{
 		Output: &buf,
-		Format: gllog.FormatConsole,
+		Format: gllog.FormatJSON,
 		Level:  gllog.LevelInfo,
 	})
 	if err != nil {
 		panic(err)
 	}
-	logger.Info("hello", zap.String("name", "GLTools"))
-	fmt.Println(buf.Len() > 0)
+	gllog.SetDefault(logger)
+
+	ctx := gllog.WithTrace(context.Background(), "trace-001", "span-001")
+	gllog.InfoContext(ctx, "hello", zap.String("name", "GLTools"))
+
+	fmt.Println(strings.Contains(buf.String(), `"trace_id":"trace-001"`))
 }
 ```
 

@@ -343,11 +343,11 @@ err := client.PostFile(context.Background(), uploadURL, nil, fields, "file", "./
 
 ## gllog
 
-`gllog` 提供基于 `go.uber.org/zap` 的高性能结构化日志能力，支持控制台/JSON 输出、默认日志器、调用方信息、错误堆栈，以及按小时或按天切分日志文件。
+`gllog` 提供基于 `go.uber.org/zap` 的高性能结构化日志能力，支持控制台/JSON 输出、默认日志器、调用方信息、错误堆栈、链路字段，以及按小时或按天切分日志文件。
 
 导入路径：`github.com/z-nuo/GLTools/gllog`
 
-常用类型和函数：`Format`、`FormatJSON`、`FormatConsole`、`Level`、`LevelInfo`、`Rotate`、`RotateHourly`、`RotateDaily`、`Config`、`New`、`SetDefault`、`L`、`S`、`Sync`。
+常用类型和函数：`Format`、`FormatJSON`、`FormatConsole`、`Level`、`LevelInfo`、`Rotate`、`RotateHourly`、`RotateDaily`、`Config`、`New`、`SetDefault`、`L`、`S`、`Sync`、`WithTrace`、`TraceID`、`SpanID`、`TraceFields`、`WithContext`、`DebugContext`、`InfoContext`、`WarnContext`、`ErrorContext`。
 
 企业级日志库通常需要满足这些要求：
 
@@ -360,14 +360,19 @@ err := client.PostFile(context.Background(), uploadURL, nil, fields, "file", "./
 - 支持按小时或按天切分日志文件，便于归档和清理。
 - 支持 stdout、文件、自定义 writer 和同时输出。
 - 支持全局默认 logger，降低业务代码接入成本。
+- 支持从 `context.Context` 自动写入 `trace_id` 和 `span_id`，便于按请求链路检索日志。
 - 提供 Sync 能力，进程退出前可主动刷新日志缓冲。
+
+说明：`gllog` 的链路追踪能力是日志侧的链路字段透传和输出，适合把一次请求、一次 RPC 或一个任务的日志串起来检索；它不替代 OpenTelemetry、Jaeger、SkyWalking 等完整分布式追踪系统。
 
 ```go
 package main
 
 import (
 	"bytes"
+	"context"
 	"fmt"
+	"strings"
 
 	"go.uber.org/zap"
 	"github.com/z-nuo/GLTools/gllog"
@@ -377,14 +382,18 @@ func main() {
 	var buf bytes.Buffer
 	logger, err := gllog.New(gllog.Config{
 		Output: &buf,
-		Format: gllog.FormatConsole,
+		Format: gllog.FormatJSON,
 		Level:  gllog.LevelInfo,
 	})
 	if err != nil {
 		panic(err)
 	}
-	logger.Info("hello", zap.String("name", "GLTools"))
-	fmt.Println(buf.Len() > 0)
+	gllog.SetDefault(logger)
+
+	ctx := gllog.WithTrace(context.Background(), "trace-001", "span-001")
+	gllog.InfoContext(ctx, "hello", zap.String("name", "GLTools"))
+
+	fmt.Println(strings.Contains(buf.String(), `"trace_id":"trace-001"`))
 }
 ```
 

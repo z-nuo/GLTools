@@ -2,6 +2,7 @@ package gllog
 
 import (
 	"bytes"
+	"context"
 	"os"
 	"path/filepath"
 	"strings"
@@ -131,5 +132,90 @@ func TestNewWritesDailyRotatedFile(t *testing.T) {
 	}
 	if !strings.Contains(string(data), `"msg":"file log"`) {
 		t.Fatalf("file log output = %s", string(data))
+	}
+}
+
+func TestWithTraceStoresTraceAndSpanInContext(t *testing.T) {
+	ctx := WithTrace(context.Background(), "trace-001", "span-001")
+
+	if got := TraceID(ctx); got != "trace-001" {
+		t.Fatalf("TraceID() = %q, want %q", got, "trace-001")
+	}
+	if got := SpanID(ctx); got != "span-001" {
+		t.Fatalf("SpanID() = %q, want %q", got, "span-001")
+	}
+}
+
+func TestWithContextAddsTraceFieldsToLogger(t *testing.T) {
+	buf := new(bytes.Buffer)
+	logger, err := New(Config{Output: buf, Format: FormatJSON, Level: LevelInfo})
+	if err != nil {
+		t.Fatal(err)
+	}
+	ctx := WithTrace(context.Background(), "trace-002", "span-002")
+
+	WithContext(ctx, logger).Info("trace log")
+
+	got := buf.String()
+	if !strings.Contains(got, `"trace_id":"trace-002"`) {
+		t.Fatalf("log output = %s", got)
+	}
+	if !strings.Contains(got, `"span_id":"span-002"`) {
+		t.Fatalf("log output = %s", got)
+	}
+}
+
+func TestContextLevelHelpersUseDefaultLogger(t *testing.T) {
+	prev := L()
+	t.Cleanup(func() {
+		SetDefault(prev)
+	})
+
+	buf := new(bytes.Buffer)
+	logger, err := New(Config{Output: buf, Format: FormatJSON, Level: LevelDebug})
+	if err != nil {
+		t.Fatal(err)
+	}
+	SetDefault(logger)
+	ctx := WithTrace(context.Background(), "trace-003", "span-003")
+
+	DebugContext(ctx, "debug log", zap.String("name", "debug"))
+	InfoContext(ctx, "info log")
+	WarnContext(ctx, "warn log")
+	ErrorContext(ctx, "error log", nil, zap.String("name", "error"))
+
+	got := buf.String()
+	for _, want := range []string{
+		`"msg":"debug log"`,
+		`"msg":"info log"`,
+		`"msg":"warn log"`,
+		`"msg":"error log"`,
+		`"trace_id":"trace-003"`,
+		`"span_id":"span-003"`,
+		`"name":"debug"`,
+		`"name":"error"`,
+	} {
+		if !strings.Contains(got, want) {
+			t.Fatalf("log output missing %s: %s", want, got)
+		}
+	}
+}
+
+func TestTraceFieldsSkipsEmptyValues(t *testing.T) {
+	buf := new(bytes.Buffer)
+	logger, err := New(Config{Output: buf, Format: FormatJSON, Level: LevelInfo})
+	if err != nil {
+		t.Fatal(err)
+	}
+	ctx := WithTrace(context.Background(), "trace-004", "")
+
+	WithContext(ctx, logger).Info("trace log")
+
+	got := buf.String()
+	if !strings.Contains(got, `"trace_id":"trace-004"`) {
+		t.Fatalf("log output = %s", got)
+	}
+	if strings.Contains(got, `"span_id"`) {
+		t.Fatalf("log output should not contain empty span_id: %s", got)
 	}
 }

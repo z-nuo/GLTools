@@ -33,3 +33,7 @@ go.work.sum
 
 # Superpowers local execution state
 .superpowers/
+
+# Test
+logs
+main.go
