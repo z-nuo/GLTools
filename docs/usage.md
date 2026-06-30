@@ -220,7 +220,13 @@ import (
 )
 
 func main() {
-	path := glfile.Join(os.TempDir(), "gltools-example", "hello.txt")
+	dir, err := os.MkdirTemp("", "gltools-example-*")
+	if err != nil {
+		panic(err)
+	}
+	defer os.RemoveAll(dir)
+
+	path := glfile.Join(dir, "hello.txt")
 	if err := glfile.WriteText(path, "hello"); err != nil {
 		panic(err)
 	}

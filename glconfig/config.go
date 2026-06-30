@@ -28,8 +28,8 @@ func LoadYAML(path string, out any) error {
 
 // Env 读取环境变量，缺失时返回默认值。
 func Env(key string, def string) string {
-	value := os.Getenv(key)
-	if value == "" {
+	value, ok := os.LookupEnv(key)
+	if !ok {
 		return def
 	}
 	return value

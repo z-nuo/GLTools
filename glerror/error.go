@@ -6,9 +6,12 @@ import (
 
 // CodeError 表示带业务错误码的错误。
 type CodeError struct {
-	Code    int
+	// Code 表示业务错误码。
+	Code int
+	// Message 表示错误消息。
 	Message string
-	Err     error
+	// Err 表示被包装的底层错误。
+	Err error
 }
 
 // New 创建带错误码和消息的错误。

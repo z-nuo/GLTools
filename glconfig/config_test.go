@@ -49,9 +49,13 @@ func TestLoadYAML(t *testing.T) {
 
 func TestEnvReturnsValueOrDefault(t *testing.T) {
 	t.Setenv("GLTOOLS_NAME", "api")
+	t.Setenv("GLTOOLS_EMPTY_NAME", "")
 
 	if got := Env("GLTOOLS_NAME", "default"); got != "api" {
 		t.Fatalf("Env() = %q, want %q", got, "api")
+	}
+	if got := Env("GLTOOLS_EMPTY_NAME", "default"); got != "" {
+		t.Fatalf("Env() = %q, want empty string", got)
 	}
 	if got := Env("GLTOOLS_MISSING", "default"); got != "default" {
 		t.Fatalf("Env() = %q, want %q", got, "default")

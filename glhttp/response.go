@@ -4,9 +4,12 @@ import "github.com/z-nuo/GLTools/glerror"
 
 // Response 表示统一 HTTP JSON 响应。
 type Response[T any] struct {
-	Code    int    `json:"code"`
+	// Code 表示业务状态码。
+	Code int `json:"code"`
+	// Message 表示响应消息。
 	Message string `json:"message"`
-	Data    T      `json:"data"`
+	// Data 表示响应数据。
+	Data T `json:"data"`
 }
 
 // Success 创建成功响应。

@@ -24,6 +24,13 @@ func NewClient(timeout time.Duration) *Client {
 	}
 }
 
+// NewClientWithHTTPClient 使用已有的 http.Client 创建客户端。
+func NewClientWithHTTPClient(client *http.Client) *Client {
+	return &Client{
+		client: client,
+	}
+}
+
 // GetJSON 发起 GET 请求并将 JSON 响应解码到 out。
 func (c *Client) GetJSON(ctx context.Context, url string, headers map[string]string, out any) error {
 	return c.doJSON(ctx, http.MethodGet, url, headers, nil, out)

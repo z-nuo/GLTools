@@ -19,9 +19,13 @@ const (
 
 // Config 表示日志配置。
 type Config struct {
-	Output    io.Writer
-	Format    Format
-	Level     slog.Level
+	// Output 表示日志输出目标。
+	Output io.Writer
+	// Format 表示日志输出格式。
+	Format Format
+	// Level 表示日志级别。
+	Level slog.Level
+	// AddSource 表示是否记录源码位置。
 	AddSource bool
 }
 
