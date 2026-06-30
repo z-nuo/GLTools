@@ -3,7 +3,7 @@ package glthrift
 import (
 	"errors"
 
-	thrift "github.com/apache/thrift/lib/go/thrift"
+	"github.com/apache/thrift/lib/go/thrift"
 )
 
 // ClientConn 封装 Apache Thrift 客户端连接。
@@ -38,10 +38,11 @@ func NewClientConn(addr string, opts ...ClientOption) (*ClientConn, error) {
 	if err != nil {
 		return nil, err
 	}
-	socket, err := thrift.NewTSocketTimeout(cfg.Addr, cfg.ConnectTimeout, cfg.SocketTimeout)
-	if err != nil {
-		return nil, err
-	}
+	socket := thrift.NewTSocketConf(cfg.Addr, &thrift.TConfiguration{
+		ConnectTimeout: cfg.ConnectTimeout,
+		SocketTimeout:  cfg.SocketTimeout,
+	})
+
 	transport, err := transportFactory.GetTransport(socket)
 	if err != nil {
 		return nil, err
