@@ -789,11 +789,11 @@ func main() {
 ```
 ````
 
-- [ ] **Step 3: Check exported API comments**
+- [ ] **Step 3: Check exported API comments and vet output**
 
 Run: `go vet ./...`
 
-Expected: PASS. If GoDoc comments are missing for exported identifiers, add Chinese comments before continuing.
+Expected: PASS. Then inspect every exported identifier in the changed packages and confirm it has a Chinese GoDoc comment before continuing.
 
 - [ ] **Step 4: Run full tests**
 
