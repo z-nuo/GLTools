@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"net/url"
+	"os"
 	"strings"
 	"testing"
 	"time"
@@ -136,6 +137,106 @@ func TestClientPostForm(t *testing.T) {
 		"type": []string{"toolkit"},
 	}
 	err := NewClient(time.Second).PostForm(context.Background(), server.URL, map[string]string{"X-Token": "abc"}, form, &out)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !out.OK {
+		t.Fatal("OK = false, want true")
+	}
+}
+
+func TestClientPostMultipart(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != http.MethodPost {
+			t.Fatalf("Method = %s, want POST", r.Method)
+		}
+		if got := r.Header.Get("Content-Type"); !strings.HasPrefix(got, "multipart/form-data; boundary=") {
+			t.Fatalf("Content-Type = %q", got)
+		}
+		if r.Header.Get("X-Token") != "abc" {
+			t.Fatalf("X-Token = %q", r.Header.Get("X-Token"))
+		}
+		if err := r.ParseMultipartForm(1024); err != nil {
+			t.Fatal(err)
+		}
+		if r.FormValue("name") != "gltools" {
+			t.Fatalf("form name = %q", r.FormValue("name"))
+		}
+		file, header, err := r.FormFile("upload")
+		if err != nil {
+			t.Fatal(err)
+		}
+		defer file.Close()
+		if header.Filename != "hello.txt" {
+			t.Fatalf("filename = %q, want hello.txt", header.Filename)
+		}
+		content, err := io.ReadAll(file)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if string(content) != "hello file" {
+			t.Fatalf("file content = %q", string(content))
+		}
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = w.Write([]byte(`{"ok":true}`))
+	}))
+	defer server.Close()
+
+	var out struct {
+		OK bool `json:"ok"`
+	}
+	files := []MultipartFile{
+		{FieldName: "upload", FileName: "hello.txt", Reader: strings.NewReader("hello file")},
+	}
+	fields := url.Values{"name": []string{"gltools"}}
+	err := NewClient(time.Second).PostMultipart(context.Background(), server.URL, map[string]string{"X-Token": "abc"}, fields, files, &out)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !out.OK {
+		t.Fatal("OK = false, want true")
+	}
+}
+
+func TestClientPostFile(t *testing.T) {
+	dir := t.TempDir()
+	path := dir + "/hello.txt"
+	if err := os.WriteFile(path, []byte("hello from disk"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if err := r.ParseMultipartForm(1024); err != nil {
+			t.Fatal(err)
+		}
+		if r.FormValue("name") != "gltools" {
+			t.Fatalf("form name = %q", r.FormValue("name"))
+		}
+		file, header, err := r.FormFile("upload")
+		if err != nil {
+			t.Fatal(err)
+		}
+		defer file.Close()
+		if header.Filename != "hello.txt" {
+			t.Fatalf("filename = %q, want hello.txt", header.Filename)
+		}
+		content, err := io.ReadAll(file)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if string(content) != "hello from disk" {
+			t.Fatalf("file content = %q", string(content))
+		}
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = w.Write([]byte(`{"ok":true}`))
+	}))
+	defer server.Close()
+
+	var out struct {
+		OK bool `json:"ok"`
+	}
+	fields := url.Values{"name": []string{"gltools"}}
+	err := NewClient(time.Second).PostFile(context.Background(), server.URL, nil, fields, "upload", path, &out)
 	if err != nil {
 		t.Fatal(err)
 	}

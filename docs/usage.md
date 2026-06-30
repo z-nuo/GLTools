@@ -237,11 +237,11 @@ func main() {
 
 ## glhttp
 
-`glhttp` 提供统一 JSON 响应结构、JSON HTTP 客户端和表单 POST 请求能力。
+`glhttp` 提供统一 JSON 响应结构、JSON HTTP 客户端、表单 POST 请求和 multipart 文件上传能力。
 
 导入路径：`github.com/z-nuo/GLTools/glhttp`
 
-常用类型和函数：`Response`、`Success`、`Fail`、`Client`、`NewClient`、`NewClientWithHTTPClient`、`GetJSON`、`PostJSON`、`PostForm`。
+常用类型和函数：`Response`、`Success`、`Fail`、`Client`、`NewClient`、`NewClientWithHTTPClient`、`GetJSON`、`PostJSON`、`PostForm`、`MultipartFile`、`PostMultipart`、`PostFile`。
 
 ```go
 package main
@@ -278,6 +278,13 @@ func main() {
 	}
 	fmt.Println(glhttp.Success(out).Data["message"])
 }
+```
+
+本地文件上传可以使用 `PostFile`；需要从内存、网络流或多个文件上传时，使用 `MultipartFile` 和 `PostMultipart`。
+
+```text
+fields := url.Values{"name": []string{"GLTools"}}
+err := client.PostFile(context.Background(), uploadURL, nil, fields, "file", "./demo.txt", &out)
 ```
 
 ## gllog
