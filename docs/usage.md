@@ -241,7 +241,7 @@ func main() {
 
 导入路径：`github.com/z-nuo/GLTools/glhttp`
 
-常用类型和函数：`Response`、`Success`、`Fail`、`Client`、`NewClient`、`GetJSON`、`PostJSON`。
+常用类型和函数：`Response`、`Success`、`Fail`、`Client`、`NewClient`、`NewClientWithHTTPClient`、`GetJSON`、`PostJSON`。
 
 ```go
 package main
