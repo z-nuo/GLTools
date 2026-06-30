@@ -248,7 +248,6 @@ package main
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"net/http"
 	"net/http/httptest"
@@ -259,7 +258,7 @@ import (
 
 func main() {
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		_ = json.NewEncoder(w).Encode(map[string]string{"message": "ok"})
+		_, _ = w.Write([]byte(`{"message":"ok"}`))
 	}))
 	defer server.Close()
 

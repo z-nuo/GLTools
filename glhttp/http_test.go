@@ -2,14 +2,17 @@ package glhttp
 
 import (
 	"context"
-	"encoding/json"
 	"io"
 	"net/http"
 	"net/http/httptest"
 	"strings"
 	"testing"
 	"time"
+
+	jsoniter "github.com/json-iterator/go"
 )
+
+var testJSONAPI = jsoniter.ConfigCompatibleWithStandardLibrary
 
 type roundTripFunc func(*http.Request) (*http.Response, error)
 
@@ -76,7 +79,7 @@ func TestClientPostJSON(t *testing.T) {
 		var body struct {
 			Name string `json:"name"`
 		}
-		if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
+		if err := testJSONAPI.NewDecoder(r.Body).Decode(&body); err != nil {
 			t.Fatal(err)
 		}
 		if body.Name != "gltools" {

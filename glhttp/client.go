@@ -3,12 +3,15 @@ package glhttp
 import (
 	"bytes"
 	"context"
-	"encoding/json"
 	"fmt"
 	"io"
 	"net/http"
 	"time"
+
+	jsoniter "github.com/json-iterator/go"
 )
+
+var jsonAPI = jsoniter.ConfigCompatibleWithStandardLibrary
 
 // Client 是简单的 JSON HTTP 客户端。
 type Client struct {
@@ -44,7 +47,7 @@ func (c *Client) PostJSON(ctx context.Context, url string, headers map[string]st
 func (c *Client) doJSON(ctx context.Context, method string, url string, headers map[string]string, body any, out any) error {
 	var reader io.Reader
 	if body != nil {
-		data, err := json.Marshal(body)
+		data, err := jsonAPI.Marshal(body)
 		if err != nil {
 			return err
 		}
@@ -74,7 +77,7 @@ func (c *Client) doJSON(ctx context.Context, method string, url string, headers 
 	if out == nil {
 		return nil
 	}
-	return json.NewDecoder(resp.Body).Decode(out)
+	return jsonAPI.NewDecoder(resp.Body).Decode(out)
 }
 
 func (c *Client) httpClient() *http.Client {

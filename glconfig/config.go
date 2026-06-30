@@ -1,12 +1,14 @@
 package glconfig
 
 import (
-	"encoding/json"
 	"os"
 	"strconv"
 
+	jsoniter "github.com/json-iterator/go"
 	"gopkg.in/yaml.v3"
 )
+
+var jsonAPI = jsoniter.ConfigCompatibleWithStandardLibrary
 
 // LoadJSON 从 JSON 文件加载配置到目标值。
 func LoadJSON(path string, out any) error {
@@ -14,7 +16,7 @@ func LoadJSON(path string, out any) error {
 	if err != nil {
 		return err
 	}
-	return json.Unmarshal(data, out)
+	return jsonAPI.Unmarshal(data, out)
 }
 
 // LoadYAML 从 YAML 文件加载配置到目标值。

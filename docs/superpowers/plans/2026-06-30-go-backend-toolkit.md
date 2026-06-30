@@ -369,7 +369,7 @@ Expected before implementation: FAIL. Expected after implementation: PASS.
 
 - [ ] **Step 6: Implement `gljson`**
 
-Use `encoding/json`. `Valid` accepts a string and calls `json.Valid([]byte(s))`. `Pretty` uses `json.MarshalIndent(v, "", "  ")`.
+Use `github.com/json-iterator/go` with `ConfigCompatibleWithStandardLibrary`. `Valid` accepts a string and calls the compatible API's `Valid([]byte(s))`. `Pretty` uses `MarshalIndent(v, "", "  ")`.
 
 - [ ] **Step 7: Write failing tests for `glfile`**
 
@@ -576,7 +576,7 @@ Expected before implementation: FAIL. Expected after implementation: PASS.
 
 - [ ] **Step 4: Implement `glconfig`**
 
-Use `encoding/json` for JSON, `gopkg.in/yaml.v3` for YAML, `os.Getenv`, `strconv.Atoi`, and `strconv.ParseBool`. `EnvInt` and `EnvBool` return defaults when parsing fails.
+Use `github.com/json-iterator/go` with `ConfigCompatibleWithStandardLibrary` for JSON, `gopkg.in/yaml.v3` for YAML, `os.LookupEnv`, `strconv.Atoi`, and `strconv.ParseBool`. `EnvInt` and `EnvBool` return defaults when parsing fails.
 
 - [ ] **Step 5: Run package tests**
 
