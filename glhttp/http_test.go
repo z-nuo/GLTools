@@ -5,6 +5,7 @@ import (
 	"io"
 	"net/http"
 	"net/http/httptest"
+	"net/url"
 	"strings"
 	"testing"
 	"time"
@@ -94,6 +95,47 @@ func TestClientPostJSON(t *testing.T) {
 		OK bool `json:"ok"`
 	}
 	err := NewClient(time.Second).PostJSON(context.Background(), server.URL, map[string]string{"X-Token": "abc"}, map[string]string{"name": "gltools"}, &out)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !out.OK {
+		t.Fatal("OK = false, want true")
+	}
+}
+
+func TestClientPostForm(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != http.MethodPost {
+			t.Fatalf("Method = %s, want POST", r.Method)
+		}
+		if r.Header.Get("Content-Type") != "application/x-www-form-urlencoded" {
+			t.Fatalf("Content-Type = %q", r.Header.Get("Content-Type"))
+		}
+		if r.Header.Get("X-Token") != "abc" {
+			t.Fatalf("X-Token = %q", r.Header.Get("X-Token"))
+		}
+		if err := r.ParseForm(); err != nil {
+			t.Fatal(err)
+		}
+		if r.Form.Get("name") != "gltools" {
+			t.Fatalf("form name = %q", r.Form.Get("name"))
+		}
+		if r.Form.Get("type") != "toolkit" {
+			t.Fatalf("form type = %q", r.Form.Get("type"))
+		}
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = w.Write([]byte(`{"ok":true}`))
+	}))
+	defer server.Close()
+
+	var out struct {
+		OK bool `json:"ok"`
+	}
+	form := url.Values{
+		"name": []string{"gltools"},
+		"type": []string{"toolkit"},
+	}
+	err := NewClient(time.Second).PostForm(context.Background(), server.URL, map[string]string{"X-Token": "abc"}, form, &out)
 	if err != nil {
 		t.Fatal(err)
 	}

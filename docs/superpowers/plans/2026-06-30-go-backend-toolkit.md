@@ -422,6 +422,7 @@ git commit -m "feat: add encoding random json and file helpers"
   - `glhttp.NewClient(timeout time.Duration) *Client`
   - `(*Client).GetJSON(ctx context.Context, url string, headers map[string]string, out any) error`
   - `(*Client).PostJSON(ctx context.Context, url string, headers map[string]string, body any, out any) error`
+  - `(*Client).PostForm(ctx context.Context, url string, headers map[string]string, form url.Values, out any) error`
 
 - [ ] **Step 1: Write failing tests for `glerror`**
 

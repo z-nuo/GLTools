@@ -6,6 +6,8 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"net/url"
+	"strings"
 	"time"
 
 	jsoniter "github.com/json-iterator/go"
@@ -44,16 +46,26 @@ func (c *Client) PostJSON(ctx context.Context, url string, headers map[string]st
 	return c.doJSON(ctx, http.MethodPost, url, headers, body, out)
 }
 
+// PostForm 发起 POST 表单请求，将 form 编码为 application/x-www-form-urlencoded，并将 JSON 响应解码到 out。
+func (c *Client) PostForm(ctx context.Context, url string, headers map[string]string, form url.Values, out any) error {
+	return c.doRequest(ctx, http.MethodPost, url, headers, strings.NewReader(form.Encode()), "application/x-www-form-urlencoded", out)
+}
+
 func (c *Client) doJSON(ctx context.Context, method string, url string, headers map[string]string, body any, out any) error {
 	var reader io.Reader
+	contentType := ""
 	if body != nil {
 		data, err := jsonAPI.Marshal(body)
 		if err != nil {
 			return err
 		}
 		reader = bytes.NewReader(data)
+		contentType = "application/json"
 	}
+	return c.doRequest(ctx, method, url, headers, reader, contentType, out)
+}
 
+func (c *Client) doRequest(ctx context.Context, method string, url string, headers map[string]string, reader io.Reader, contentType string, out any) error {
 	req, err := http.NewRequestWithContext(ctx, method, url, reader)
 	if err != nil {
 		return err
@@ -61,8 +73,8 @@ func (c *Client) doJSON(ctx context.Context, method string, url string, headers 
 	for key, value := range headers {
 		req.Header.Set(key, value)
 	}
-	if body != nil && req.Header.Get("Content-Type") == "" {
-		req.Header.Set("Content-Type", "application/json")
+	if contentType != "" && req.Header.Get("Content-Type") == "" {
+		req.Header.Set("Content-Type", contentType)
 	}
 
 	resp, err := c.httpClient().Do(req)

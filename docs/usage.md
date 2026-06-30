@@ -237,11 +237,11 @@ func main() {
 
 ## glhttp
 
-`glhttp` 提供统一 JSON 响应结构和简单 JSON HTTP 客户端。
+`glhttp` 提供统一 JSON 响应结构、JSON HTTP 客户端和表单 POST 请求能力。
 
 导入路径：`github.com/z-nuo/GLTools/glhttp`
 
-常用类型和函数：`Response`、`Success`、`Fail`、`Client`、`NewClient`、`NewClientWithHTTPClient`、`GetJSON`、`PostJSON`。
+常用类型和函数：`Response`、`Success`、`Fail`、`Client`、`NewClient`、`NewClientWithHTTPClient`、`GetJSON`、`PostJSON`、`PostForm`。
 
 ```go
 package main
@@ -251,6 +251,7 @@ import (
 	"fmt"
 	"net/http"
 	"net/http/httptest"
+	"net/url"
 	"time"
 
 	"github.com/z-nuo/GLTools/glhttp"
@@ -258,13 +259,21 @@ import (
 
 func main() {
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if err := r.ParseForm(); err != nil {
+			panic(err)
+		}
+		if r.Form.Get("name") != "GLTools" {
+			http.Error(w, "bad form", http.StatusBadRequest)
+			return
+		}
 		_, _ = w.Write([]byte(`{"message":"ok"}`))
 	}))
 	defer server.Close()
 
 	var out map[string]string
 	client := glhttp.NewClient(time.Second)
-	if err := client.GetJSON(context.Background(), server.URL, nil, &out); err != nil {
+	form := url.Values{"name": []string{"GLTools"}}
+	if err := client.PostForm(context.Background(), server.URL, nil, form, &out); err != nil {
 		panic(err)
 	}
 	fmt.Println(glhttp.Success(out).Data["message"])
